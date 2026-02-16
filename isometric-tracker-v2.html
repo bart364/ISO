@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometric Exercise Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .exercise-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid transparent;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .exercise-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+
+        .exercise-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .exercise-target {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .exercise-best {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .timer-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 5em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 20px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-display {
+            font-size: 1.5em;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .status-on {
+            color: #10b981;
+        }
+
+        .status-off {
+            color: #ef4444;
+        }
+
+        .status-ready {
+            color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-voice {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-voice.listening {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .mic-status {
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .countdown {
+            font-size: 3em;
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .history-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .history-time {
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏋️ Isometric Exercise Tracker</h1>
+            <p class="subtitle">Voice-activated training for excellence at 50+</p>
+        </div>
+
+        <div class="exercise-grid" id="exerciseGrid">
+            <!-- Exercise cards will be populated here -->
+        </div>
+
+        <div class="timer-section">
+            <div class="status-display status-ready" id="statusDisplay">
+                Select an exercise to begin
+            </div>
+            <div class="timer-display" id="timerDisplay">0:00</div>
+            
+            <div class="stats" id="statsDisplay" style="display: none;">
+                <div class="stat-row">
+                    <span class="stat-label">Time On:</span>
+                    <span class="stat-value" id="timeOn">0s</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Target Time:</span>
+                    <span class="stat-value" id="targetTime">0s</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Progress:</span>
+                    <span class="stat-value" id="progressPercent">0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Today's Best:</span>
+                    <span class="stat-value" id="todayBest">0s</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn-start" onclick="startExercise()">Start Exercise</button>
+                <button id="voiceBtn" class="btn-voice" onclick="toggleVoice()">🎤 Enable Voice</button>
+                <button id="stopBtn" class="btn-stop" onclick="stopExercise()" disabled>Stop</button>
+            </div>
+
+            <div class="mic-status" id="micStatus">
+                Voice commands: "Start [exercise name]" • "On" • "Off" • "Stop"
+            </div>
+        </div>
+
+        <div class="history-section">
+            <div class="history-title">Recent Sessions</div>
+            <div id="historyList">
+                <p style="color: #666; text-align: center;">No sessions yet. Start your first workout!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Exercise database
+        const exercises = [
+            { id: 'deadhang', name: 'Dead Hang', target: 90, best: 0 },
+            { id: 'plank', name: 'Plank Hold', target: 120, best: 0 },
+            { id: 'wallsit', name: 'Wall Sit', target: 90, best: 0 },
+            { id: 'singlelleg', name: 'Single Leg Balance', target: 45, best: 0 }
+        ];
+
+        let selectedExercise = null;
+        let timerInterval = null;
+        let totalSeconds = 0;
+        let onSeconds = 0;
+        let isOn = false;
+        let isRunning = false;
+        let recognition = null;
+        let voiceEnabled = false;
+        let audioContext = null;
+        let countdownPhase = false;
+
+        // Initialize
+        async function init() {
+            await loadExerciseData();
+            renderExerciseCards();
+            setupVoiceRecognition();
+        }
+
+        // Storage functions
+        async function loadExerciseData() {
+            try {
+                for (let exercise of exercises) {
+                    const result = await window.storage.get(`exercise:${exercise.id}`, false);
+                    if (result) {
+                        const data = JSON.parse(result.value);
+                        exercise.best = data.best || 0;
+                    }
+                }
+            } catch (error) {
+                console.log('No saved data found, starting fresh');
+            }
+        }
+
+        async function saveExerciseData(exerciseId, bestTime) {
+            try {
+                const data = { best: bestTime };
+                await window.storage.set(`exercise:${exerciseId}`, JSON.stringify(data), false);
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+
+        async function saveHistory(exerciseId, exerciseName, timeOn, targetTime, percentage) {
+            try {
+                const historyKey = `history:${exerciseId}:${Date.now()}`;
+                const historyData = {
+                    exerciseName,
+                    timeOn,
+                    targetTime,
+                    percentage,
+                    date: new Date().toISOString()
+                };
+                await window.storage.set(historyKey, JSON.stringify(historyData), false);
+                await loadHistory();
+            } catch (error) {
+                console.error('Error saving history:', error);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const result = await window.storage.list('history:', false);
+                if (result && result.keys) {
+                    const historyItems = [];
+                    for (let key of result.keys.slice(-10).reverse()) {
+                        const item = await window.storage.get(key, false);
+                        if (item) {
+                            historyItems.push(JSON.parse(item.value));
+                        }
+                    }
+                    renderHistory(historyItems);
+                }
+            } catch (error) {
+                console.log('No history found');
+            }
+        }
+
+        function renderHistory(items) {
+            const historyList = document.getElementById('historyList');
+            if (items.length === 0) {
+                historyList.innerHTML = '<p style="color: #666; text-align: center;">No sessions yet. Start your first workout!</p>';
+                return;
+            }
+
+            historyList.innerHTML = items.map(item => {
+                const date = new Date(item.date);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return `
+                    <div class="history-item">
+                        <div>
+                            <div style="font-weight: 600;">${item.exerciseName}</div>
+                            <div class="history-date">${dateStr}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="history-time">${item.timeOn}s / ${item.targetTime}s</div>
+                            <div style="color: #667eea; font-weight: 600;">${item.percentage}%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderExerciseCards() {
+            const grid = document.getElementById('exerciseGrid');
+            grid.innerHTML = exercises.map(exercise => {
+                const progress = exercise.best > 0 ? Math.min((exercise.best / exercise.target) * 100, 100) : 0;
+                return `
+                    <div class="exercise-card" onclick="selectExercise('${exercise.id}')">
+                        <div class="exercise-name">${exercise.name}</div>
+                        <div class="exercise-target">Target: ${exercise.target}s</div>
+                        <div class="exercise-best">Best: ${exercise.best}s</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectExercise(id) {
+            if (isRunning) return;
+            
+            selectedExercise = exercises.find(e => e.id === id);
+            
+            // Update UI
+            document.querySelectorAll('.exercise-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.exercise-card').classList.add('selected');
+            
+            document.getElementById('statusDisplay').textContent = `${selectedExercise.name} selected - Ready to start`;
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        function startExercise() {
+            if (!selectedExercise) return;
+            
+            document.getElementById('startBtn').disabled = true;
+            
+            // Create the speech utterance
+            const announcement = `Target time for ${selectedExercise.name} is ${selectedExercise.target} seconds. Your best time today is ${selectedExercise.best} seconds. Timer starting in 4, 3, 2, 1, Go.`;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(announcement);
+                utterance.rate = 0.9;
+                
+                // Start countdown after speech begins
+                utterance.onstart = () => {
+                    countdownPhase = true;
+                    // Wait for the intro, then start visual countdown
+                    // Approximate timing: intro takes about 5 seconds
+                    setTimeout(() => {
+                        let countdown = 4;
+                        const countdownInterval = setInterval(() => {
+                            countdown--;
+                            if (countdown > 0) {
+                                document.getElementById('statusDisplay').innerHTML = `<span class="countdown">${countdown}</span>`;
+                            } else if (countdown === 0) {
+                                document.getElementById('statusDisplay').innerHTML = `<span class="countdown">GO!</span>`;
+                            } else {
+                                clearInterval(countdownInterval);
+                            }
+                        }, 1000);
+                    }, 5000);
+                };
+                
+                // Start timer only after speech completely finishes
+                utterance.onend = () => {
+                    countdownPhase = false;
+                    beep(800, 200);
+                    beginTimer();
+                };
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                // Fallback if no speech synthesis
+                countdownPhase = true;
+                let countdown = 4;
+                
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        document.getElementById('statusDisplay').innerHTML = `<span class="countdown">${countdown}</span>`;
+                    } else if (countdown === 0) {
+                        document.getElementById('statusDisplay').innerHTML = `<span class="countdown">GO!</span>`;
+                        beep(800, 200);
+                    } else {
+                        clearInterval(countdownInterval);
+                        countdownPhase = false;
+                        beginTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function beginTimer() {
+            isRunning = true;
+            totalSeconds = 0;
+            onSeconds = 0;
+            isOn = true; // Start in ON state
+            
+            document.getElementById('statusDisplay').textContent = 'ON - Holding position';
+            document.getElementById('statusDisplay').className = 'status-display status-on';
+            document.getElementById('statsDisplay').style.display = 'block';
+            document.getElementById('stopBtn').disabled = false;
+            
+            updateStats();
+            
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                if (isOn) {
+                    onSeconds++;
+                }
+                
+                updateDisplay();
+                updateStats();
+                
+                if (totalSeconds >= selectedExercise.target) {
+                    completeExercise();
+                }
+            }, 1000);
+        }
+
+        function toggleState(newState) {
+            if (!isRunning || countdownPhase) return;
+            
+            isOn = newState;
+            
+            // Beep to confirm command heard
+            beep(newState ? 1200 : 800, 100);
+            
+            if (isOn) {
+                document.getElementById('statusDisplay').textContent = 'ON - Holding position';
+                document.getElementById('statusDisplay').className = 'status-display status-on';
+            } else {
+                document.getElementById('statusDisplay').textContent = 'OFF - Resting';
+                document.getElementById('statusDisplay').className = 'status-display status-off';
+            }
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateStats() {
+            document.getElementById('timeOn').textContent = `${onSeconds}s`;
+            document.getElementById('targetTime').textContent = `${selectedExercise.target}s`;
+            const percentage = Math.round((onSeconds / selectedExercise.target) * 100);
+            document.getElementById('progressPercent').textContent = `${percentage}%`;
+            document.getElementById('todayBest').textContent = `${selectedExercise.best}s`;
+        }
+
+        async function completeExercise() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            
+            beep(1000, 500);
+            
+            const percentage = Math.round((onSeconds / selectedExercise.target) * 100);
+            
+            speak(`Exercise time complete. Time on equals ${onSeconds} seconds, or ${percentage} percent of the goal time.`);
+            
+            document.getElementById('statusDisplay').textContent = 'Exercise Complete!';
+            document.getElementById('statusDisplay').className = 'status-display status-ready';
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+            
+            // Update best time if improved
+            if (onSeconds > selectedExercise.best) {
+                selectedExercise.best = onSeconds;
+                await saveExerciseData(selectedExercise.id, onSeconds);
+                renderExerciseCards();
+            }
+            
+            // Save to history
+            await saveHistory(selectedExercise.id, selectedExercise.name, onSeconds, selectedExercise.target, percentage);
+        }
+
+        function stopExercise() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            isRunning = false;
+            countdownPhase = false;
+            
+            document.getElementById('statusDisplay').textContent = 'Exercise stopped';
+            document.getElementById('statusDisplay').className = 'status-display status-ready';
+            document.getElementById('timerDisplay').textContent = '0:00';
+            document.getElementById('statsDisplay').style.display = 'none';
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        // Voice recognition
+        function setupVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                
+                recognition.onresult = (event) => {
+                    const last = event.results.length - 1;
+                    const command = event.results[last][0].transcript.toLowerCase().trim();
+                    
+                    console.log('Voice command:', command);
+                    handleVoiceCommand(command);
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    if (event.error === 'no-speech') {
+                        // Ignore no-speech errors
+                        return;
+                    }
+                };
+                
+                recognition.onend = () => {
+                    if (voiceEnabled) {
+                        recognition.start();
+                    }
+                };
+            }
+        }
+
+        function toggleVoice() {
+            if (!recognition) {
+                alert('Voice recognition not supported in this browser');
+                return;
+            }
+            
+            voiceEnabled = !voiceEnabled;
+            const btn = document.getElementById('voiceBtn');
+            
+            if (voiceEnabled) {
+                recognition.start();
+                btn.textContent = '🎤 Listening...';
+                btn.classList.add('listening');
+                document.getElementById('micStatus').textContent = 'Voice commands active - listening...';
+            } else {
+                recognition.stop();
+                btn.textContent = '🎤 Enable Voice';
+                btn.classList.remove('listening');
+                document.getElementById('micStatus').textContent = 'Voice commands: "Start [exercise name]" • "On" • "Off" • "Stop"';
+            }
+        }
+
+        function handleVoiceCommand(command) {
+            // On/Off commands
+            if (command === 'on') {
+                toggleState(true);
+                return;
+            }
+            
+            if (command === 'off') {
+                toggleState(false);
+                return;
+            }
+            
+            // Stop command
+            if (command === 'stop' || command === 'end') {
+                stopExercise();
+                return;
+            }
+            
+            // Start exercise commands
+            if (command.includes('start')) {
+                exercises.forEach(exercise => {
+                    const exerciseWords = exercise.name.toLowerCase().split(' ');
+                    if (exerciseWords.some(word => command.includes(word))) {
+                        selectExercise(exercise.id);
+                        setTimeout(() => startExercise(), 500);
+                    }
+                });
+            }
+        }
+
+        // Text-to-speech
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Beep sound
+        function beep(frequency, duration) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+
+        // Initialize app
+        init();
+        loadHistory();
+    </script>
+</body>
+</html>
